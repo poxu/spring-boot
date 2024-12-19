@@ -32,7 +32,9 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.ManagedBeanSettings;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
@@ -154,6 +156,10 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 		if (!vendorProperties.containsKey(PROVIDER_DISABLES_AUTOCOMMIT)) {
 			configureProviderDisablesAutocommit(vendorProperties);
 		}
+		if (isOpenInViewEnabled(getProperties())) {
+			vendorProperties.put(AvailableSettings.CONNECTION_HANDLING,
+					PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION);
+		}
 	}
 
 	private void configureJtaPlatform(Map<String, Object> vendorProperties) throws LinkageError {
@@ -178,6 +184,10 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 	private boolean isDataSourceAutoCommitDisabled() {
 		DataSourcePoolMetadata poolMetadata = this.poolMetadataProvider.getDataSourcePoolMetadata(getDataSource());
 		return poolMetadata != null && Boolean.FALSE.equals(poolMetadata.getDefaultAutoCommit());
+	}
+
+	private boolean isOpenInViewEnabled(JpaProperties jpaProperties) {
+		return jpaProperties.getOpenInView() == null || jpaProperties.getOpenInView();
 	}
 
 	private boolean runningOnWebSphere() {
